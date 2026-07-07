@@ -18,8 +18,8 @@ enum class MutationType { Gaussian, Uniform };
 
 struct GAParameters {
     int maxGeneration = 200;
-    double eps = 1e-6;
-    int window = 20;
+    double stagnationEps = 1e-6;
+    int stagnationWindow = 20;
     int populationSize = 100;
     double nicheRadius = 0.5;
     double crossoverProb = 0.8;
@@ -32,7 +32,7 @@ struct GAParameters {
 struct GenerationSnapshot {
     int generationNumber;
     std::vector<Individual> population;
-    std::vector<Individual> currentBestIndividuals;
+    std::vector<Individual> maxima;
     double bestFitness;
     double avgFitness;
 };
