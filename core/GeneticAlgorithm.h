@@ -1,4 +1,5 @@
 #include <vector>
+#include <random>
 #include "Types.h"
 
 
@@ -30,8 +31,12 @@ private:
 
     GenerationSnapshot buildSnapshot();
 
+    std::vector<Individual> extractMaxima() const;
+    bool isLocalMaximum(double x, double eps) const;
+
     ProblemDefinition problem_;
     GAParameters params_;
+    std::mt19937 rng_;
     std::vector<Individual> population_;
     std::vector<GenerationSnapshot> history_;
 };
