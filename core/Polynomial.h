@@ -1,4 +1,4 @@
 #include <vector>
 
 
-double evaluatePolynomial(std::vector<double> coeffs, double x);
+double evaluatePolynomial(const std::vector<double>& coeffs, double x);
