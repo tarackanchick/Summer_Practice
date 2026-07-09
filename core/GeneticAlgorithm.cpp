@@ -1,13 +1,13 @@
 #include "GeneticAlgorithm.h"
 #include "Polynomial.h"
-#include <random>
 #include <cmath>
 #include <algorithm>
 
 GeneticAlgorithm::GeneticAlgorithm(const ProblemDefinition& problem,
                                    const GAParameters& params) :
     problem_(problem),
-    params_(params)
+    params_(params),
+    rng_(std::random_device{}())
 {
     initializePopulation();
 }
@@ -15,9 +15,6 @@ GeneticAlgorithm::GeneticAlgorithm(const ProblemDefinition& problem,
 void GeneticAlgorithm::initializePopulation() {
     population_.clear();
     population_.reserve(params_.populationSize);
-
-    std::random_device rd;
-    std::mt19937 rng(rd());
 
     std::uniform_real_distribution<double> distribution(
         problem_.l,
@@ -27,7 +24,7 @@ void GeneticAlgorithm::initializePopulation() {
     for (int i = 0; i < params_.populationSize; i++) {
         Individual ind;
 
-        ind.x = distribution(rng);
+        ind.x = distribution(rng_);
         ind.rawFitness = evaluatePolynomial(problem_.coeffs, ind.x);
 
         population_.push_back(ind);
@@ -41,6 +38,7 @@ void GeneticAlgorithm::step() {
 
     std::vector<Individual> newPopulation;
     newPopulation.reserve(params_.populationSize);
+
     for (int i = 0; i < params_.populationSize; i++) {
         Individual p1 = selectParent();
         Individual p2 = selectParent();
@@ -54,6 +52,18 @@ void GeneticAlgorithm::step() {
     population_ = newPopulation;
 
     history_.push_back(buildSnapshot());
+}
+
+bool GeneticAlgorithm::converged() const {
+    if ((int)history_.size() >= params_.maxGeneration) return true;
+
+    if ((int)history_.size() >= params_.stagnationWindow) {
+        double current = history_.back().bestFitness;
+        double previous = history_[history_.size() - 1 - params_.stagnationWindow].bestFitness;
+        if (std::abs(current - previous) < params_.stagnationEps) return true;
+    }
+
+    return false;
 }
 
 void GeneticAlgorithm::computeSharedFitness() {
@@ -83,12 +93,10 @@ Individual GeneticAlgorithm::selectParent() {
 }
 
 Individual GeneticAlgorithm::tournamentSelect() {
-    std::random_device rd;
-    std::mt19937 rng(rd());
     std::uniform_int_distribution<int> dist(0, population_.size() - 1);
     
-    Individual p1 = population_[dist(rng)];
-    Individual p2 = population_[dist(rng)];
+    Individual p1 = population_[dist(rng_)];
+    Individual p2 = population_[dist(rng_)];
     
     return (p1.sharedFitness > p2.sharedFitness) ? p1 : p2;
 }
@@ -108,17 +116,14 @@ Individual GeneticAlgorithm::rouletteSelect() {
         sumFitness += (ind.sharedFitness - minFitness);
     }
 
-    std::random_device rd;
-    std::mt19937 rng(rd());
-
     if (sumFitness == 0.0) {
         std::uniform_int_distribution<int> intDist(0, population_.size() - 1);
-        return population_[intDist(rng)];
+        return population_[intDist(rng_)];
     }
 
     // выбираем случайное число от 0 до суммы
     std::uniform_real_distribution<double> dist(0.0, sumFitness);
-    double randomValue = dist(rng);
+    double randomValue = dist(rng_);
 
     double currentSum = 0.0;
     for (const auto& ind : population_) {
@@ -140,12 +145,10 @@ Individual GeneticAlgorithm::crossover(const Individual& p1, const Individual& p
 }
 
 Individual GeneticAlgorithm::arithmeticCrossover(const Individual& p1, const Individual& p2) {
-    std::random_device rd;
-    std::mt19937 rng(rd());
     std::uniform_real_distribution<double> chance(0.0, 1.0);
     
     Individual child;
-    if (chance(rng) < params_.crossoverProb) {
+    if (chance(rng_) < params_.crossoverProb) {
         // среднее арифметическое
         child.x = (p1.x + p2.x) / 2.0;
     } else {
@@ -155,13 +158,11 @@ Individual GeneticAlgorithm::arithmeticCrossover(const Individual& p1, const Ind
 }
 
 Individual GeneticAlgorithm::blxCrossover(const Individual& p1, const Individual& p2) {
-    std::random_device rd;
-    std::mt19937 rng(rd());
     std::uniform_real_distribution<double> chance(0.0, 1.0);
     
     Individual child;
     
-    if (chance(rng) < params_.crossoverProb) {
+    if (chance(rng_) < params_.crossoverProb) {
         double alpha = 0.5;
         
         double min_x = std::min(p1.x, p2.x);
@@ -173,7 +174,7 @@ Individual GeneticAlgorithm::blxCrossover(const Individual& p1, const Individual
         
         // ребенок в случайной точке расширенного отрезка
         std::uniform_real_distribution<double> dist(lower_bound, upper_bound);
-        child.x = dist(rng);
+        child.x = dist(rng_);
     } else {
         child.x = p1.x; 
     }
@@ -190,28 +191,24 @@ void GeneticAlgorithm::mutate(Individual& ind) {
 }
 
 void GeneticAlgorithm::uniformMutate(Individual& ind) {
-    std::random_device rd;
-    std::mt19937 rng(rd());
     std::uniform_real_distribution<double> chance(0.0, 1.0);
     
-    if (chance(rng) < params_.mutationProb) {
+    if (chance(rng_) < params_.mutationProb) {
         // замена на полностью случайное число
         std::uniform_real_distribution<double> dist(problem_.l, problem_.r);
-        ind.x = dist(rng);
+        ind.x = dist(rng_);
     }
 }
 
 void GeneticAlgorithm::gaussianMutate(Individual& ind) {
-    std::random_device rd;
-    std::mt19937 rng(rd());
     std::uniform_real_distribution<double> chance(0.0, 1.0);
     
-    if (chance(rng) < params_.mutationProb) {
+    if (chance(rng_) < params_.mutationProb) {
         double sigma = (problem_.r - problem_.l) * 0.1; 
         
         std::normal_distribution<double> dist(0.0, sigma);
         
-        ind.x += dist(rng);
+        ind.x += dist(rng_);
         
         if (ind.x < problem_.l) {
             ind.x = problem_.l;
@@ -225,6 +222,7 @@ GenerationSnapshot GeneticAlgorithm::buildSnapshot() {
     GenerationSnapshot snap;
     snap.generationNumber = history_.size();
     snap.population = population_;
+    snap.maxima = extractMaxima();
     
     double sumFitness = 0.0;
     double maxFitness = -1e9; 
@@ -238,7 +236,46 @@ GenerationSnapshot GeneticAlgorithm::buildSnapshot() {
     
     snap.bestFitness = maxFitness;
     snap.avgFitness = population_.empty() ? 0.0 : (sumFitness / population_.size());
-    // snap.maxima - пока пусто, заполните позже логикой поиска локальных пиков для вывода на график
     
     return snap;
+}
+
+std::vector<Individual> GeneticAlgorithm::extractMaxima() const {
+    if (population_.empty()) return {};
+
+    std::vector<Individual> sorted = population_;
+    std::sort(sorted.begin(), sorted.end(),
+              [](const Individual& a, const Individual& b) { return a.x < b.x; });
+    
+    std::vector<Individual> maxima;
+    std::vector<Individual> cluster = { sorted[0] };
+    double checkEps = (problem_.r - problem_.l) * 0.001;
+
+    auto flushCluster = [&]() {
+        Individual best = *std::max_element(cluster.begin(), cluster.end(),
+            [](const Individual& a, const Individual& b) { return a.rawFitness < b.rawFitness; });
+        if (isLocalMaximum(best.x, checkEps)) {
+            maxima.push_back(best);
+        }
+        // если проверка не прошла — кандидат отбрасывается, это была ложная кластеризация
+    };
+
+    for (size_t i = 1; i < sorted.size(); i++) {
+        if (sorted[i].x - cluster.back().x < params_.nicheRadius) {
+            cluster.push_back(sorted[i]);
+        } else {
+            flushCluster();
+            cluster = { sorted[i] };
+        }
+    }
+    flushCluster();
+    
+    return maxima;
+}
+
+bool GeneticAlgorithm::isLocalMaximum(double x, double eps) const {
+    double center = evaluatePolynomial(problem_.coeffs, x);
+    double left   = evaluatePolynomial(problem_.coeffs, x - eps);
+    double right  = evaluatePolynomial(problem_.coeffs, x + eps);
+    return center >= left && center >= right;
 }
