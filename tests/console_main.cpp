@@ -4,9 +4,9 @@
 
 int main() {
     ProblemDefinition problem;
-    problem.coeffs = {1.0, 0.0, -5.0, 0.0, 0.5};
+    // problem.coeffs = {1.0, 0.0, -5.0, 0.0, 0.5};
     // problem.coeffs = {5.0, 0.0, -20.0, 0.0, 10.0, 0.0, -1.0};
-    // problem.coeffs = {1.0, 0.5, 20.0, 0.0, -25.0, 0.0, 9.0, 0.0, -1.0};
+    problem.coeffs = {1.0, 0.5, 20.0, 0.0, -25.0, 0.0, 9.0, 0.0, -1.0};
     // problem.coeffs = {1.0, 0.5, 20.0, 0.0, -25.0, 0.0, 10.0, 0.0, -1.0};
 
     problem.l = -4.0;
