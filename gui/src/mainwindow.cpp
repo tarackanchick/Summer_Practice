@@ -3,6 +3,7 @@
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     initGUI();
+    resize(1200, 800);
 }
 
 void MainWindow::initGUI() {
@@ -27,7 +28,22 @@ void MainWindow::initGUI() {
     connect(btnSkip, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnParameters, &QPushButton::clicked, this, &MainWindow::parametersClicked);
 
+    QList<QPushButton*> navButtons = {btnToStart, btnPrev, btnNext,
+        btnToEnd, btnSkip, btnSave, btnGenerate, btnLoad};
+
+    for (QPushButton* btn : navButtons) {
+        btn->setMaximumHeight(30);
+        if (btn == btnSkip || btn == btnSave) {
+            btn->setFixedWidth(100);
+        } else if (btn == btnNext || btn == btnPrev) {
+            btn->setFixedWidth(30);
+        } else if (btn == btnToStart || btn == btnToEnd){
+            btn->setFixedWidth(40);
+        }
+    }
+
     QLabel *lblTitle = new QLabel("Поиск максимумов полинома с помощью генетического алгоритма", this);
+    lblTitle->setAlignment(Qt::AlignCenter);
     QLabel *lblPolynom = new QLabel("Полином f(x):", this);
     QLabel *lblInterval = new QLabel("Интервал", this);
     QLabel *lblLeftVal = new QLabel("l:", this);
@@ -49,6 +65,7 @@ void MainWindow::initGUI() {
 
     lblStepCounter = new QLabel("0/0", this);
     lblGlobalMaxVal = new QLabel("0", this);
+    lblStepCounter->setAlignment(Qt::AlignCenter);
 
     linePolynom = new QLineEdit(this);
 
@@ -96,29 +113,40 @@ void MainWindow::initGUI() {
     frameAdvanced = new QFrame(this);
     frameAdvanced->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
 
+    QList<QDoubleSpinBox*> doubleSpins = {spinL, spinR, spinCrossProb,
+        spinMutationProb, spinNicheRadius, spinEps};
+    QList<QSpinBox*> spins = {spinShowGen, spinCntGenerations, spinPopulationSize, spinWindow};
+
+    for (QDoubleSpinBox *dSpin : doubleSpins) dSpin->setMaximumWidth(100);
+
+    for (QSpinBox *spin : spins){
+        spin->setMaximum(10000);
+        spin->setMaximumWidth(100);
+    }
+
     QGridLayout *advancedLayout = new QGridLayout(frameAdvanced);
     advancedLayout->addWidget(lblCntGenerations, 0, 0);
-    advancedLayout->addWidget(spinCntGenerations, 0, 1);
+    advancedLayout->addWidget(spinCntGenerations, 0, 5);
     advancedLayout->addWidget(lblPopulationSize, 1, 0);
-    advancedLayout->addWidget(spinPopulationSize, 1, 1);
+    advancedLayout->addWidget(spinPopulationSize, 1, 5);
     advancedLayout->addWidget(lblCrossType, 2, 0);
-    advancedLayout->addWidget(cmbCrossType, 2, 1);
+    advancedLayout->addWidget(cmbCrossType, 2, 5);
     advancedLayout->addWidget(lblSelectionType, 3, 0);
-    advancedLayout->addWidget(cmbSelectionType, 3, 1);
+    advancedLayout->addWidget(cmbSelectionType, 3, 5);
     advancedLayout->addWidget(lblMutationType, 4, 0);
-    advancedLayout->addWidget(cmbMutationType, 4, 1);
+    advancedLayout->addWidget(cmbMutationType, 4, 5);
     advancedLayout->addWidget(lblCrossProb, 5, 0);
-    advancedLayout->addWidget(spinCrossProb, 5, 1);
+    advancedLayout->addWidget(spinCrossProb, 5, 5);
     advancedLayout->addWidget(lblMutationProb, 6, 0);
-    advancedLayout->addWidget(spinMutationProb, 6, 1);
+    advancedLayout->addWidget(spinMutationProb, 6, 5);
     advancedLayout->addWidget(lblNicheRadius, 7, 0);
-    advancedLayout->addWidget(spinNicheRadius, 7, 1);
+    advancedLayout->addWidget(spinNicheRadius, 7, 5);
     advancedLayout->addWidget(lblEps, 8, 0);
-    advancedLayout->addWidget(spinEps, 8, 1);
+    advancedLayout->addWidget(spinEps, 8, 5);
     advancedLayout->addWidget(lblWindow, 9, 0);
-    advancedLayout->addWidget(spinWindow, 9, 1);
-    advancedLayout->addWidget(btnGenerate, 10, 0);
-    advancedLayout->addWidget(btnLoad, 10, 1);
+    advancedLayout->addWidget(spinWindow, 9, 5);
+    advancedLayout->addWidget(btnGenerate, 10, 4);
+    advancedLayout->addWidget(btnLoad, 10, 5);
 
     frameAdvanced->setHidden(true);
 
@@ -140,40 +168,54 @@ void MainWindow::initGUI() {
     verticalLayout1->addLayout(horizLayout1);
     verticalLayout1->addWidget(btnParameters);
     verticalLayout1->addWidget(frameAdvanced);
-    verticalLayout1->addStretch();
 
     QHBoxLayout *horizLayout4 = new QHBoxLayout();
     horizLayout4->addWidget(lblShowGen);
     horizLayout4->addWidget(spinShowGen);
+    horizLayout4->addStretch(1);
 
     QHBoxLayout *horizLayout3 = new QHBoxLayout();
+    horizLayout3->setSpacing(4);
+    horizLayout3->setAlignment(Qt::AlignRight);
     horizLayout3->addWidget(btnToStart);
     horizLayout3->addWidget(btnPrev);
     horizLayout3->addWidget(lblStepCounter);
     horizLayout3->addWidget(btnNext);
     horizLayout3->addWidget(btnToEnd);
     horizLayout3->addWidget(btnSkip);
-    horizLayout3->addWidget(btnSave);
+
+    QHBoxLayout *horizLayout5 = new QHBoxLayout();
+    horizLayout5->setAlignment(Qt::AlignRight);
+    horizLayout5->addWidget(btnSave);
+
+    QHBoxLayout *horizLayout6 = new QHBoxLayout();
+    horizLayout6->addWidget(lblGlobalMax);
+    horizLayout6->addWidget(lblGlobalMaxVal);
+    horizLayout6->addStretch(1);
 
     QVBoxLayout *verticalLayout2 = new QVBoxLayout();
     verticalLayout2->addLayout(horizLayout4);
     verticalLayout2->addWidget(txtCurrentPopulation);
+    verticalLayout2->addStretch(1);
     verticalLayout2->addWidget(lblRes);
     verticalLayout2->addWidget(lblLocalMax);
     verticalLayout2->addWidget(txtLocalMaxVals);
-    verticalLayout2->addWidget(lblGlobalMax);
-    verticalLayout2->addWidget(lblGlobalMaxVal);
+    verticalLayout2->addLayout(horizLayout6);
+    verticalLayout2->addLayout(horizLayout5);
 
-    QHBoxLayout *horizLayout5 = new QHBoxLayout();
-    horizLayout5->addWidget(plotPlaceholder2, 1);
-    horizLayout5->addLayout(verticalLayout2, 1);
+    QVBoxLayout *verticalLayout3 = new QVBoxLayout();
+    verticalLayout3->addWidget(plotPlaceholder2, 1);
+    verticalLayout3->addLayout(horizLayout3);
+
+    QHBoxLayout *horizLayout7 = new QHBoxLayout();
+    horizLayout7->addLayout(verticalLayout3, 1);
+    horizLayout7->addLayout(verticalLayout2, 1);
 
     QWidget *containerWidget = new QWidget();
     QVBoxLayout *mainLayout = new QVBoxLayout(containerWidget);
-    mainLayout->addLayout(verticalLayout1);
-    mainLayout->addWidget(plotPlaceholder1);
-    mainLayout->addLayout(horizLayout5);
-    mainLayout->addLayout(horizLayout3);
+    mainLayout->addLayout(verticalLayout1, 0);
+    mainLayout->addWidget(plotPlaceholder1, 1);
+    mainLayout->addLayout(horizLayout7, 1);
 
     QScrollArea *scrollArea = new QScrollArea(this);
     scrollArea->setWidget(containerWidget);
@@ -284,4 +326,40 @@ void MainWindow::outHandle(GAParameters gaParams, PolynomData polynomData) {
 void MainWindow::parametersClicked() {
     bool isHidden = frameAdvanced->isHidden();
     frameAdvanced->setHidden(!isHidden);
+}
+
+bool MainWindow::getStartClicked(){
+    return startClicked;
+}
+
+bool MainWindow::getGenerateClicked(){
+    return generateClicked;
+}
+
+bool MainWindow::getLoadClicked(){
+    return loadClicked;
+}
+
+bool MainWindow::getSaveClicked(){
+    return saveClicked;
+}
+
+bool MainWindow::getSkipClicked(){
+    return skipClicked;
+}
+
+bool MainWindow::getToBeginClicked(){
+    return toBeginClicked;
+}
+
+bool MainWindow::getToEndClicked(){
+    return toEndClicked;
+}
+
+bool MainWindow::getNextClicked(){
+    return nextClicked;
+}
+
+bool MainWindow::getPrevClicked(){
+    return prevClicked;
 }
