@@ -30,6 +30,16 @@ public:
     std::pair<GAParameters, PolynomData> inputHandle();
     void outHandle(GAParameters gaParams, PolynomData polynomData);
 
+    bool getStartClicked();
+    bool getGenerateClicked();
+    bool getLoadClicked();
+    bool getSaveClicked();
+    bool getSkipClicked();
+    bool getToBeginClicked();
+    bool getToEndClicked();
+    bool getNextClicked();
+    bool getPrevClicked();
+
 private:
     Ui::MainWindow *ui;
 
@@ -74,10 +84,10 @@ private:
     bool loadClicked = false;
     bool saveClicked = false;
     bool skipClicked = false;
-    bool toBeginClicked = false;
-    bool toEndClicked = false;
-    bool nextClicked = false;
-    bool prevClicked = false;
+    bool toBeginClicked = false;    //>>
+    bool toEndClicked = false;      //<<
+    bool nextClicked = false;       //>
+    bool prevClicked = false;       //<
 };
 
 #endif
