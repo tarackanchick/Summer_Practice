@@ -1,4 +1,4 @@
-#include "../core/GeneticAlgorithm.h"
+#include "../core/GeneticAlgorithm.h" // Л, Е
 #include <iostream>
 #include <iomanip>
 

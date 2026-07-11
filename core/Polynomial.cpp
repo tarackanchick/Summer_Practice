@@ -1,4 +1,4 @@
-#include "Polynomial.h"
+#include "Polynomial.h" // Е
 #include <cmath>
 
 double evaluatePolynomial(const std::vector<double>& coeffs, double x) {

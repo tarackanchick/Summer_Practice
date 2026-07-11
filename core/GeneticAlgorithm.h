@@ -1,4 +1,4 @@
-#include <vector>
+#include <vector> // Л
 #include <random>
 #include "Types.h"
 

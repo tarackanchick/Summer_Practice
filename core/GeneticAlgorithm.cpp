@@ -33,7 +33,7 @@ void GeneticAlgorithm::initializePopulation() { // Л
     history_.push_back(buildSnapshot());
 }
 
-void GeneticAlgorithm::step() { // Л
+void GeneticAlgorithm::step() { // Л, Е
     computeSharedFitness();
 
     std::vector<Individual> newPopulation;
@@ -81,7 +81,7 @@ bool GeneticAlgorithm::converged() const { // Л, Е
 // и учитывать возможность того, что улучшение произошло, но было потеряно
 // мб стоит хранить значение лучшего индивидума-элиты, чтоб лучшее решение не терялось 
 
-void GeneticAlgorithm::computeSharedFitness() {
+void GeneticAlgorithm::computeSharedFitness() { // Е
     // Находим минимальное значение приспособленности
     double minFitness = population_[0].rawFitness;
     for (const auto& ind : population_) {
@@ -264,7 +264,7 @@ GenerationSnapshot GeneticAlgorithm::buildSnapshot() {  // Е
     return snap;
 }
 
-std::vector<Individual> GeneticAlgorithm::extractMaxima() const { // Л
+std::vector<Individual> GeneticAlgorithm::extractMaxima() const { // Л, Е
     if (population_.empty()) return {};
 
     std::vector<Individual> sorted = population_;
