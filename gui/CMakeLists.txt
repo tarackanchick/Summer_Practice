@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.19)
 project(gui_for_ga LANGUAGES CXX)
 
-find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt6 6.5 REQUIRED COMPONENTS Core Widgets Charts)
 
 qt_standard_project_setup()
 
@@ -10,14 +10,15 @@ qt_add_executable(gui_for_ga
     main.cpp
     mainwindow.cpp
     mainwindow.h
-    mainwindow.ui
     Types.h
+
 )
 
 target_link_libraries(gui_for_ga
     PRIVATE
         Qt::Core
         Qt::Widgets
+        Qt6::Charts
 )
 
 install(TARGETS gui_for_ga
