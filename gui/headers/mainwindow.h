@@ -3,7 +3,6 @@
 
 #include <QMainWindow>
 #include "Types.h"
-#include "ui_mainwindow.h"
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFileDialog>
@@ -15,6 +14,10 @@
 #include <QComboBox>
 #include <QTextEdit>
 #include <QFrame>
+#include <QtCharts/QChartView>
+#include <QtCharts/QLineSeries>
+#include <QtCharts/QScatterSeries>
+#include <vector>
 
 class MainWindow : public QMainWindow {
     Q_OBJECT
@@ -23,12 +26,15 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
 
     void initGUI();
-    void updateResults(std::vector<std::vector<double>> generations, std::vector<double> locals, double maxVal);
+    void updateResults(std::vector<std::vector<double>>& generations, std::vector<double>& locals, double& maxVal);
     void handleClicked();
     void parametersClicked();
-    void arrowHandle(size_t total, size_t cur);
+    void arrowHandle(size_t& total, size_t& cur);
     std::pair<GAParameters, PolynomData> inputHandle();
-    void outHandle(GAParameters gaParams, PolynomData polynomData);
+    void outHandle(GAParameters& gaParams, PolynomData& polynomData);
+
+    void drawPolynomPlot(std::vector<double>& funcValues, std::vector<double>& funcArgs);
+    void updatePlots(std::vector<GenerationSnapshot>& gaHistory, size_t& index);
 
     bool getStartClicked();
     bool getGenerateClicked();
@@ -41,10 +47,8 @@ public:
     bool getPrevClicked();
 
 private:
-    Ui::MainWindow *ui;
-
-    QLabel *plotPlaceholder1;
-    QLabel *plotPlaceholder2;
+    QChartView *plotPolynom;
+    QChartView *plotQuality;
 
     QPushButton *btnRun;
     QPushButton *btnParameters;

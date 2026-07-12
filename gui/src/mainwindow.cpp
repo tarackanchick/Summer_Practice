@@ -28,10 +28,10 @@ void MainWindow::initGUI() {
     connect(btnSkip, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnParameters, &QPushButton::clicked, this, &MainWindow::parametersClicked);
 
-    QList<QPushButton*> navButtons = {btnToStart, btnPrev, btnNext,
+    QList<QPushButton*> buttons = {btnToStart, btnPrev, btnNext,
         btnToEnd, btnSkip, btnSave, btnGenerate, btnLoad};
 
-    for (QPushButton* btn : navButtons) {
+    for (QPushButton* btn : buttons) {
         btn->setMaximumHeight(30);
         if (btn == btnSkip || btn == btnSave) {
             btn->setFixedWidth(100);
@@ -82,7 +82,7 @@ void MainWindow::initGUI() {
     spinShowGen = new QSpinBox(this);
 
     cmbCrossType = new QComboBox(this);
-    cmbCrossType->addItems({"Арифметический", "Смешение"});
+    cmbCrossType->addItems({"Арифметическое", "Смешение"});
 
     cmbMutationType = new QComboBox(this);
     cmbMutationType->addItems({"Гауссова", "Равномерная"});
@@ -93,36 +93,45 @@ void MainWindow::initGUI() {
     txtCurrentPopulation = new QTextEdit(this);
     txtCurrentPopulation->setReadOnly(true);
     txtCurrentPopulation->setPlaceholderText("Здесь будет список особей...");
-    txtCurrentPopulation->setMaximumHeight(100);
+    txtCurrentPopulation->setMaximumHeight(150);
 
     txtLocalMaxVals = new QTextEdit(this);
     txtLocalMaxVals->setReadOnly(true);
     txtLocalMaxVals->setPlaceholderText("Здесь будут локальные максимумы...");
-    txtLocalMaxVals->setMaximumHeight(50);
+    txtLocalMaxVals->setMaximumHeight(100);
 
-    plotPlaceholder1 = new QLabel("Место под график функции полинома", this);
-    plotPlaceholder1->setAlignment(Qt::AlignCenter);
-    plotPlaceholder1->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    plotPlaceholder1->setMinimumSize(400, 150);
-
-    plotPlaceholder2 = new QLabel("Место под график функции качества", this);
-    plotPlaceholder2->setAlignment(Qt::AlignCenter);
-    plotPlaceholder2->setFrameStyle(QFrame::Panel | QFrame::Sunken);
-    plotPlaceholder2->setMinimumSize(300, 180);
-
-    frameAdvanced = new QFrame(this);
-    frameAdvanced->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
+    plotPolynom = new QChartView(centralWidget());
+    plotQuality = new QChartView(centralWidget());
+    plotPolynom->setChart(new QChart());
+    plotQuality->setChart(new QChart());
 
     QList<QDoubleSpinBox*> doubleSpins = {spinL, spinR, spinCrossProb,
         spinMutationProb, spinNicheRadius, spinEps};
     QList<QSpinBox*> spins = {spinShowGen, spinCntGenerations, spinPopulationSize, spinWindow};
 
-    for (QDoubleSpinBox *dSpin : doubleSpins) dSpin->setMaximumWidth(100);
+    for (QDoubleSpinBox *dSpin : doubleSpins){
+        dSpin->setMaximumWidth(200);
+        dSpin->setDecimals(6);
+        dSpin->setSingleStep(0.000001);
+
+        if (dSpin == spinL || dSpin == spinR){
+            spinL->setRange(-1000.0, 1000.0);
+            spinR->setRange(-1000.0, 1000.0);
+        }
+    }
 
     for (QSpinBox *spin : spins){
         spin->setMaximum(10000);
-        spin->setMaximumWidth(100);
+        spin->setMaximumWidth(200);
     }
+
+    frameAdvanced = new QFrame(centralWidget());
+    frameAdvanced->setFrameStyle(QFrame::StyledPanel | QFrame::Sunken);
+
+    QHBoxLayout *horizBtnLayout = new QHBoxLayout();
+    horizBtnLayout->addStretch(1);
+    horizBtnLayout->addWidget(btnGenerate);
+    horizBtnLayout->addWidget(btnLoad);
 
     QGridLayout *advancedLayout = new QGridLayout(frameAdvanced);
     advancedLayout->addWidget(lblCntGenerations, 0, 0);
@@ -145,9 +154,9 @@ void MainWindow::initGUI() {
     advancedLayout->addWidget(spinEps, 8, 5);
     advancedLayout->addWidget(lblWindow, 9, 0);
     advancedLayout->addWidget(spinWindow, 9, 5);
-    advancedLayout->addWidget(btnGenerate, 10, 4);
-    advancedLayout->addWidget(btnLoad, 10, 5);
+    advancedLayout->addLayout(horizBtnLayout, 10, 0, 1, 6);
 
+    frameAdvanced->setFixedSize(380, 380);
     frameAdvanced->setHidden(true);
 
     QHBoxLayout *horizLayout1 = new QHBoxLayout();
@@ -167,7 +176,6 @@ void MainWindow::initGUI() {
     verticalLayout1->addWidget(lblTitle);
     verticalLayout1->addLayout(horizLayout1);
     verticalLayout1->addWidget(btnParameters);
-    verticalLayout1->addWidget(frameAdvanced);
 
     QHBoxLayout *horizLayout4 = new QHBoxLayout();
     horizLayout4->addWidget(lblShowGen);
@@ -204,7 +212,7 @@ void MainWindow::initGUI() {
     verticalLayout2->addLayout(horizLayout5);
 
     QVBoxLayout *verticalLayout3 = new QVBoxLayout();
-    verticalLayout3->addWidget(plotPlaceholder2, 1);
+    verticalLayout3->addWidget(plotQuality, 1);
     verticalLayout3->addLayout(horizLayout3);
 
     QHBoxLayout *horizLayout7 = new QHBoxLayout();
@@ -214,7 +222,7 @@ void MainWindow::initGUI() {
     QWidget *containerWidget = new QWidget();
     QVBoxLayout *mainLayout = new QVBoxLayout(containerWidget);
     mainLayout->addLayout(verticalLayout1, 0);
-    mainLayout->addWidget(plotPlaceholder1, 1);
+     mainLayout->addWidget(plotPolynom, 1);
     mainLayout->addLayout(horizLayout7, 1);
 
     QScrollArea *scrollArea = new QScrollArea(this);
@@ -225,14 +233,16 @@ void MainWindow::initGUI() {
     setCentralWidget(scrollArea);
 }
 
-void MainWindow::updateResults(std::vector<std::vector<double>> generations, std::vector<double> locals, double maxVal) {
+void MainWindow::updateResults(std::vector<std::vector<double>>& generations, std::vector<double>& locals, double& maxVal) {
     txtCurrentPopulation->clear();
     txtLocalMaxVals->clear();
 
+    size_t cnt = 1;
     for (auto& generation : generations) {
         QString line = "";
         for (double individ : generation) {
-            line += QString("%1 ").arg(individ, 0, 'f', 2);
+            line += QString("%1. %2").arg(cnt).arg(individ, 0, 'f', 2);
+            cnt++;
         }
         txtCurrentPopulation->append(line);
     }
@@ -261,7 +271,7 @@ void MainWindow::handleClicked() {
 }
 
 
-void MainWindow::arrowHandle(size_t total, size_t cur) {
+void MainWindow::arrowHandle(size_t& total, size_t& cur) {
     QString line = QString("%1/%2").arg(cur).arg(total);
     lblStepCounter->setText(line);
 }
@@ -297,7 +307,7 @@ std::pair<GAParameters, PolynomData> MainWindow::inputHandle() {
     return std::make_pair(gaParams, polynomData);
 }
 
-void MainWindow::outHandle(GAParameters gaParams, PolynomData polynomData) {
+void MainWindow::outHandle(GAParameters& gaParams, PolynomData& polynomData) {
     linePolynom->setText(QString::fromStdString(polynomData.polynom));
     spinL->setValue(polynomData.leftBorder);
     spinR->setValue(polynomData.rightBorder);
@@ -311,16 +321,82 @@ void MainWindow::outHandle(GAParameters gaParams, PolynomData polynomData) {
     spinWindow->setValue(gaParams.stagnationWindow);
 
     if (gaParams.crossover == CrossoverType::Arithmetic)
-        cmbCrossType->setCurrentText("Турнир");
-    else cmbCrossType->setCurrentText("Рулетка");
+        cmbCrossType->setCurrentText("Арифметическое");
+    else cmbCrossType->setCurrentText("Смешение");
 
     if (gaParams.mutation == MutationType::Gaussian)
         cmbMutationType->setCurrentText("Гауссова");
     else cmbMutationType->setCurrentText("Равномерная");
 
     if (gaParams.selection == SelectionType::Tournament)
-        cmbSelectionType->setCurrentText("Арифметическое");
-    else cmbSelectionType->setCurrentText("Смешение");
+        cmbSelectionType->setCurrentText("Турнир");
+    else cmbSelectionType->setCurrentText("Рулетка");
+}
+
+void MainWindow::drawPolynomPlot(std::vector<double>& funcValues, std::vector<double>& funcArgs){
+    QChart *chart = plotPolynom->chart();
+    chart->removeAllSeries();
+
+    QLineSeries *series = new QLineSeries();
+    int i = 0;
+
+    while (i < funcValues.size()){
+        series->append(funcArgs[i], funcValues[i]);
+        ++i;
+    }
+
+    series->setName("Функция f(x)");
+    chart->addSeries(series);
+    chart->createDefaultAxes();
+    plotPolynom->setRenderHint(QPainter::Antialiasing);
+}
+
+void MainWindow::updatePlots(std::vector<GenerationSnapshot>& gaHistory, size_t& index){      //Обновление ф-и качества и максимумов на графике f(x)
+    if (index < gaHistory.size()){
+        QChart *chartQ = plotQuality->chart();
+        QChart *chartP = plotPolynom->chart();
+
+        chartQ->removeAllSeries();
+
+        QLineSeries *seriesQBest = new QLineSeries();
+        QLineSeries *seriesQAvg = new QLineSeries();
+        seriesQBest->setName("Лучшая особь");
+        seriesQAvg->setName("Среднее по популяции");
+
+        for (int i = 0; i <= index; ++i){
+            seriesQBest->append(gaHistory[i].generationNumber, gaHistory[i].bestFitness);
+            seriesQAvg->append(gaHistory[i].generationNumber, gaHistory[i].avgFitness);
+        }
+
+        chartQ->addSeries(seriesQBest);
+        chartQ->addSeries(seriesQAvg);
+        chartQ->createDefaultAxes();
+
+        for (QAbstractSeries *oldSeries : chartP->series()) {
+            if (oldSeries->name() == "Максимумы популяции") {
+                chartP->removeSeries(oldSeries);
+                break;
+            }
+        }
+
+        QScatterSeries *seriesP = new QScatterSeries();
+        seriesP->setName("Максимумы популяции");
+        seriesP->setMarkerShape(QScatterSeries::MarkerShapeCircle);
+        seriesP->setMarkerSize(10.0);
+        seriesP->setColor(Qt::red);
+        seriesP->setBorderColor(Qt::darkRed);
+
+        GenerationSnapshot snap = gaHistory[index];
+        for (int i = 0; i < snap.maxima.size(); ++i) {
+            seriesP->append(snap.maxima[i].x, snap.maxima[i].rawFitness);
+        }
+
+        chartP->addSeries(seriesP);
+        chartP->createDefaultAxes();
+
+        plotQuality->setRenderHint(QPainter::Antialiasing);
+        plotPolynom->setRenderHint(QPainter::Antialiasing);
+    }
 }
 
 void MainWindow::parametersClicked() {
