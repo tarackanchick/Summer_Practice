@@ -404,6 +404,19 @@ void MainWindow::parametersClicked() {
     frameAdvanced->setHidden(!isHidden);
 }
 
+void MainWindow::setFlagsOff(){
+    startClicked = false;
+    generateClicked = false;
+    loadClicked = false;
+    saveClicked = false;
+    skipClicked = false;
+    toBeginClicked = false;
+    toEndClicked = false;
+    nextClicked = false;
+    prevClicked = false;
+}
+
+
 bool MainWindow::getStartClicked(){
     return startClicked;
 }
