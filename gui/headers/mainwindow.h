@@ -25,7 +25,6 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget *parent = nullptr);
 
-    void initGUI();
     void updateResults(std::vector<std::vector<double>>& generations, std::vector<double>& locals, double& maxVal);
     void handleClicked();
     void parametersClicked();
@@ -46,7 +45,11 @@ public:
     bool getNextClicked();
     bool getPrevClicked();
 
+    void setFlagsOff();
+
 private:
+    void initGUI();
+
     QChartView *plotPolynom;
     QChartView *plotQuality;
 
