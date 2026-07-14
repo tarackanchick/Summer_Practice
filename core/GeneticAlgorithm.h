@@ -1,3 +1,5 @@
+#ifndef GENETIC_ALGORITHM_H
+#define GENETIC_ALGORITHM_H
 #include <vector>
 #include <random>
 #include "Types.h"
@@ -40,3 +42,5 @@ private:
     std::vector<Individual> population_;
     std::vector<GenerationSnapshot> history_;
 };
+
+#endif

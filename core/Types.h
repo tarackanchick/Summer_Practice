@@ -1,5 +1,8 @@
-#include <vector>
+#ifndef TYPES_H
+#define TYPES_H
 
+#include <vector>
+#include <string>
 
 struct Individual {
     double x;
@@ -36,3 +39,11 @@ struct GenerationSnapshot {
     double bestFitness;
     double avgFitness;
 };
+
+struct PolynomData {
+    std::string polynom = "x^2+2x+1";
+    float leftBorder = 1.0;
+    float rightBorder = 10.0;
+};
+
+#endif

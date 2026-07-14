@@ -36,17 +36,17 @@ void GeneticAlgorithm::initializePopulation() { // Л
 void GeneticAlgorithm::step() { // Л
     computeSharedFitness();
 
+    std::vector<Individual> elite = extractMaxima();
+
     std::vector<Individual> newPopulation;
     newPopulation.reserve(params_.populationSize);
 
-    // лучшая особь - элита
-    Individual bestInd = population_[0];
-    for (const auto& ind : population_) {
-        if (ind.rawFitness > bestInd.rawFitness) {
-            bestInd = ind;
+    // лучшие особи из каждой ниши - элита
+    for (const auto& ind : elite) {
+        if (newPopulation.size() < params_.populationSize) {
+            newPopulation.push_back(ind);
         }
     }
-    newPopulation.push_back(bestInd);
 
     for (int i = 1; i < params_.populationSize; i++) {
         Individual p1 = selectParent();

@@ -1,5 +1,6 @@
 build/
 /build/
-/.qtcreator
+/.qtcreator/
+.qtcreator/
 /.vscode
 *.exe
