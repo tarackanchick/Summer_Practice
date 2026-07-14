@@ -30,6 +30,7 @@ public:
     explicit MainWindow(QWidget *parent = nullptr);
 
     void updateResults(std::vector<std::vector<double>>& generations, std::vector<std::pair<double, double>>& locals, double& maxVal);
+    void updateResults(std::vector<std::vector<double>>& generations, std::vector<double>& locals, double& maxVal);
     void handleClicked();
     void parametersClicked();
     void arrowHandle(size_t& total, size_t& cur);
@@ -38,18 +39,6 @@ public:
 
     void drawPolynomPlot(std::vector<double>& funcValues, std::vector<double>& funcArgs);
     void updatePlots(std::vector<GenerationSnapshot>& gaHistory, size_t& index);
-
-    bool getStartClicked();
-    bool getGenerateClicked();
-    bool getLoadClicked();
-    bool getSaveClicked();
-    bool getSkipClicked();
-    bool getToBeginClicked();
-    bool getToEndClicked();
-    bool getNextClicked();
-    bool getPrevClicked();
-
-    void setFlagsOff();
 
 signals:
     void startRequested();
@@ -102,16 +91,6 @@ private:
     QComboBox *cmbMutationType;
     QComboBox *cmbSelectionType;
     QFrame *frameAdvanced;
-
-    bool startClicked = false;
-    bool generateClicked = false;
-    bool loadClicked = false;
-    bool saveClicked = false;
-    bool skipClicked = false;
-    bool toBeginClicked = false;    //>>
-    bool toEndClicked = false;      //<<
-    bool nextClicked = false;       //>
-    bool prevClicked = false;       //<
 };
 
 #endif

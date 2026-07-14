@@ -20,7 +20,6 @@ void MainWindow::initGUI() {
     btnPrev = new QPushButton("<", this);
     btnToStart = new QPushButton("<<", this);
     btnToEnd = new QPushButton(">>", this);
-    btnSkip = new QPushButton("Пропустить", this);
     btnSave = new QPushButton("Сохранить", this);
 
     connect(btnRun, &QPushButton::clicked, this, &MainWindow::handleClicked);
@@ -30,16 +29,15 @@ void MainWindow::initGUI() {
     connect(btnPrev, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnToStart, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnToEnd, &QPushButton::clicked, this, &MainWindow::handleClicked);
-    connect(btnSkip, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnSave, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnParameters, &QPushButton::clicked, this, &MainWindow::parametersClicked);
 
     QList<QPushButton*> buttons = {btnToStart, btnPrev, btnNext,
-        btnToEnd, btnSkip, btnSave, btnGenerate, btnLoad};
+        btnToEnd, btnSave, btnGenerate, btnLoad};
 
     for (QPushButton* btn : buttons) {
         btn->setMaximumHeight(30);
-        if (btn == btnSkip || btn == btnSave) {
+        if (btn == btnSave) {
             btn->setFixedWidth(100);
         } else if (btn == btnNext || btn == btnPrev) {
             btn->setFixedWidth(30);
@@ -64,7 +62,7 @@ void MainWindow::initGUI() {
     QLabel *lblNicheRadius = new QLabel("Радиус ниши:", this);
     QLabel *lblEps = new QLabel("Порог стагнации:", this);
     QLabel *lblWindow = new QLabel("Окно стагнации:", this);
-    QLabel *lblShowGen = new QLabel("Показать поколение:", this);
+    QLabel *lblShowGen = new QLabel("Текущее поколение:", this);
     QLabel *lblRes = new QLabel("Результат", this);
     QLabel *lblLocalMax = new QLabel("Локальные максимумы:", this);
     QLabel *lblGlobalMax = new QLabel("Глобальный максимум:", this);
@@ -85,7 +83,6 @@ void MainWindow::initGUI() {
     spinCntGenerations = new QSpinBox(this);
     spinPopulationSize = new QSpinBox(this);
     spinWindow = new QSpinBox(this);
-    spinShowGen = new QSpinBox(this);
 
     cmbCrossType = new QComboBox(this);
     cmbCrossType->addItems({"Арифметическое", "Смешение"});
@@ -114,7 +111,7 @@ void MainWindow::initGUI() {
 
     QList<QDoubleSpinBox*> doubleSpins = {spinL, spinR, spinCrossProb,
         spinMutationProb, spinNicheRadius, spinEps};
-    QList<QSpinBox*> spins = {spinShowGen, spinCntGenerations, spinPopulationSize, spinWindow};
+    QList<QSpinBox*> spins = {spinCntGenerations, spinPopulationSize, spinWindow};
 
     for (QDoubleSpinBox *dSpin : doubleSpins){
         dSpin->setMaximumWidth(200);
@@ -186,8 +183,6 @@ void MainWindow::initGUI() {
 
     QHBoxLayout *horizLayout4 = new QHBoxLayout();
     horizLayout4->addWidget(lblShowGen);
-    horizLayout4->addWidget(spinShowGen);
-    horizLayout4->addStretch(1);
 
     QHBoxLayout *horizLayout3 = new QHBoxLayout();
     horizLayout3->setSpacing(4);
@@ -197,7 +192,6 @@ void MainWindow::initGUI() {
     horizLayout3->addWidget(lblStepCounter);
     horizLayout3->addWidget(btnNext);
     horizLayout3->addWidget(btnToEnd);
-    horizLayout3->addWidget(btnSkip);
 
     QHBoxLayout *horizLayout5 = new QHBoxLayout();
     horizLayout5->setAlignment(Qt::AlignRight);
@@ -273,10 +267,8 @@ void MainWindow::handleClicked() {
     else if (clickedButton == btnPrev) emit prevRequested();
     else if (clickedButton == btnToStart) emit toBeginRequested();
     else if (clickedButton == btnToEnd) emit toEndRequested();
-    else if (clickedButton == btnSkip) emit skipRequested();
     else if (clickedButton == btnSave) emit saveRequested();
 }
-
 
 void MainWindow::arrowHandle(size_t& total, size_t& cur) {
     QString line = QString("%1/%2").arg(cur).arg(total);
@@ -379,14 +371,9 @@ void MainWindow::updatePlots(std::vector<GenerationSnapshot>& gaHistory, size_t&
         chartQ->addSeries(seriesQAvg);
         chartQ->createDefaultAxes();
 
-        // for (auto axis : chartQ->axes()) {
-        //     seriesQAvg->attachAxis(axis);
-        // }
-
         for (QAbstractSeries *oldSeries : chartP->series()) {
             if (oldSeries->name() == "Максимумы популяции") {
                 chartP->removeSeries(oldSeries);
-                delete oldSeries;
                 break;
             }
         }
@@ -413,53 +400,4 @@ void MainWindow::updatePlots(std::vector<GenerationSnapshot>& gaHistory, size_t&
 void MainWindow::parametersClicked() {
     bool isHidden = frameAdvanced->isHidden();
     frameAdvanced->setHidden(!isHidden);
-}
-
-void MainWindow::setFlagsOff(){
-    startClicked = false;
-    generateClicked = false;
-    loadClicked = false;
-    saveClicked = false;
-    skipClicked = false;
-    toBeginClicked = false;
-    toEndClicked = false;
-    nextClicked = false;
-    prevClicked = false;
-}
-
-
-bool MainWindow::getStartClicked(){
-    return startClicked;
-}
-
-bool MainWindow::getGenerateClicked(){
-    return generateClicked;
-}
-
-bool MainWindow::getLoadClicked(){
-    return loadClicked;
-}
-
-bool MainWindow::getSaveClicked(){
-    return saveClicked;
-}
-
-bool MainWindow::getSkipClicked(){
-    return skipClicked;
-}
-
-bool MainWindow::getToBeginClicked(){
-    return toBeginClicked;
-}
-
-bool MainWindow::getToEndClicked(){
-    return toEndClicked;
-}
-
-bool MainWindow::getNextClicked(){
-    return nextClicked;
-}
-
-bool MainWindow::getPrevClicked(){
-    return prevClicked;
 }
