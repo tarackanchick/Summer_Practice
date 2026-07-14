@@ -1,6 +1,5 @@
 #include "mainwindow.h"
 
-
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent) {
     initGUI();
 
@@ -32,6 +31,7 @@ void MainWindow::initGUI() {
     connect(btnToStart, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnToEnd, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnSkip, &QPushButton::clicked, this, &MainWindow::handleClicked);
+    connect(btnSave, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnParameters, &QPushButton::clicked, this, &MainWindow::parametersClicked);
 
     QList<QPushButton*> buttons = {btnToStart, btnPrev, btnNext,
@@ -89,6 +89,7 @@ void MainWindow::initGUI() {
 
     cmbCrossType = new QComboBox(this);
     cmbCrossType->addItems({"Арифметическое", "Смешение"});
+    cmbCrossType->setCurrentIndex(1);
 
     cmbMutationType = new QComboBox(this);
     cmbMutationType->addItems({"Гауссова", "Равномерная"});
@@ -239,7 +240,7 @@ void MainWindow::initGUI() {
     setCentralWidget(scrollArea);
 }
 
-void MainWindow::updateResults(std::vector<std::vector<double>>& generations, std::vector<double>& locals, double& maxVal) {
+void MainWindow::updateResults(std::vector<std::vector<double>>& generations, std::vector<std::pair<double, double>>& locals, double& maxVal) {
     txtCurrentPopulation->clear();
     txtLocalMaxVals->clear();
 
@@ -253,8 +254,8 @@ void MainWindow::updateResults(std::vector<std::vector<double>>& generations, st
         txtCurrentPopulation->append(line);
     }
 
-    for (double local : locals) {
-        QString line = QString("x = %1").arg(local, 0, 'f', 2);
+    for (const auto& local : locals) {
+        QString line = QString("x = %1, y = %2").arg(local.first, 0, 'f', 2).arg(local.second, 0, 'f', 2);
         txtLocalMaxVals->append(line);
     }
 
@@ -378,9 +379,14 @@ void MainWindow::updatePlots(std::vector<GenerationSnapshot>& gaHistory, size_t&
         chartQ->addSeries(seriesQAvg);
         chartQ->createDefaultAxes();
 
+        // for (auto axis : chartQ->axes()) {
+        //     seriesQAvg->attachAxis(axis);
+        // }
+
         for (QAbstractSeries *oldSeries : chartP->series()) {
             if (oldSeries->name() == "Максимумы популяции") {
                 chartP->removeSeries(oldSeries);
+                delete oldSeries;
                 break;
             }
         }
@@ -399,7 +405,6 @@ void MainWindow::updatePlots(std::vector<GenerationSnapshot>& gaHistory, size_t&
 
         chartP->addSeries(seriesP);
         chartP->createDefaultAxes();
-
         plotQuality->setRenderHint(QPainter::Antialiasing);
         plotPolynom->setRenderHint(QPainter::Antialiasing);
     }

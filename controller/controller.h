@@ -20,6 +20,9 @@ private slots:
     void prevGeneration();
     void firstGeneration();
     void lastGeneration();
+    void saveResults();
+    void loadParameters();
+    void generateParameters();
 
 private:
     void showGeneration(size_t index);
