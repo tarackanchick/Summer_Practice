@@ -13,10 +13,13 @@
 #include <QSpinBox>
 #include <QComboBox>
 #include <QTextEdit>
+#include <QTableWidget>
+#include <QHeaderView>
 #include <QFrame>
 #include <QtCharts/QChartView>
 #include <QtCharts/QLineSeries>
 #include <QtCharts/QScatterSeries>
+#include <QtCharts/QValueAxis>
 #include <vector>
 #include <utility>
 #include <QScrollArea>
@@ -29,8 +32,7 @@ class MainWindow : public QMainWindow {
 public:
     explicit MainWindow(QWidget *parent = nullptr);
 
-    void updateResults(std::vector<std::vector<double>>& generations, std::vector<std::pair<double, double>>& locals, double& maxVal);
-    void updateResults(std::vector<std::vector<double>>& generations, std::vector<double>& locals, double& maxVal);
+    void updateResults(std::vector<std::pair <double, double>>& generations, std::vector<std::pair<double, double>>& locals, double& maxVal);
     void handleClicked();
     void parametersClicked();
     void arrowHandle(size_t& total, size_t& cur);
@@ -69,11 +71,12 @@ private:
     QPushButton *btnToEnd;
     QPushButton *btnSkip;
     QPushButton *btnSave;
+    QPushButton *btnOK;
 
     QLabel *lblStepCounter;
     QLabel *lblGlobalMaxVal;
 
-    QTextEdit *txtCurrentPopulation;
+    QTableWidget *tblCurrentPopulation;
     QTextEdit *txtLocalMaxVals;
 
     QLineEdit *linePolynom;

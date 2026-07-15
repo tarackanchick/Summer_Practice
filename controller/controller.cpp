@@ -66,10 +66,13 @@ void Controller::showGeneration(size_t index)
 
     window_->updatePlots(history_, index);
 
-    std::vector<std::vector<double>> population(1);
+    std::vector<std::pair <double, double>> population;
 
-    for (const auto& ind : history_[index].population)
-        population[0].push_back(ind.x);
+    for (const auto& ind : history_[index].population){
+        double x = ind.x;
+        double rawF = ind.rawFitness;
+        population.push_back({x, rawF});
+    }
 
     std::vector<std::pair<double, double>> locals;
     for (const auto& ind : history_[index].maxima) {

@@ -21,6 +21,7 @@ void MainWindow::initGUI() {
     btnToStart = new QPushButton("<<", this);
     btnToEnd = new QPushButton(">>", this);
     btnSave = new QPushButton("Сохранить", this);
+    btnOK = new QPushButton("ОК", this);
 
     connect(btnRun, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnLoad, &QPushButton::clicked, this, &MainWindow::handleClicked);
@@ -31,9 +32,10 @@ void MainWindow::initGUI() {
     connect(btnToEnd, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnSave, &QPushButton::clicked, this, &MainWindow::handleClicked);
     connect(btnParameters, &QPushButton::clicked, this, &MainWindow::parametersClicked);
+    connect(btnOK, &QPushButton::clicked, this, &MainWindow::handleClicked);
 
     QList<QPushButton*> buttons = {btnToStart, btnPrev, btnNext,
-        btnToEnd, btnSave, btnGenerate, btnLoad};
+        btnToEnd, btnSave, btnGenerate, btnLoad, btnOK};
 
     for (QPushButton* btn : buttons) {
         btn->setMaximumHeight(30);
@@ -94,15 +96,22 @@ void MainWindow::initGUI() {
     cmbSelectionType = new QComboBox(this);
     cmbSelectionType->addItems({"Турнир", "Рулетка"});
 
-    txtCurrentPopulation = new QTextEdit(this);
-    txtCurrentPopulation->setReadOnly(true);
-    txtCurrentPopulation->setPlaceholderText("Здесь будет список особей...");
-    txtCurrentPopulation->setMaximumHeight(150);
+    tblCurrentPopulation = new QTableWidget(this);
+    tblCurrentPopulation->setColumnCount(3);
+    tblCurrentPopulation->setHorizontalHeaderLabels({
+        "Номер особи",
+        "Точка максимума (x)",
+        "Приспособленность"
+    });
+    tblCurrentPopulation->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    tblCurrentPopulation->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+    tblCurrentPopulation->verticalHeader()->setVisible(false);
+    tblCurrentPopulation->setMaximumHeight(210);
 
     txtLocalMaxVals = new QTextEdit(this);
     txtLocalMaxVals->setReadOnly(true);
     txtLocalMaxVals->setPlaceholderText("Здесь будут локальные максимумы...");
-    txtLocalMaxVals->setMaximumHeight(100);
+    txtLocalMaxVals->setMaximumHeight(40);
 
     plotPolynom = new QChartView(centralWidget());
     plotQuality = new QChartView(centralWidget());
@@ -136,6 +145,7 @@ void MainWindow::initGUI() {
     horizBtnLayout->addStretch(1);
     horizBtnLayout->addWidget(btnGenerate);
     horizBtnLayout->addWidget(btnLoad);
+    horizBtnLayout->addWidget(btnOK);
 
     QGridLayout *advancedLayout = new QGridLayout(frameAdvanced);
     advancedLayout->addWidget(lblCntGenerations, 0, 0);
@@ -173,9 +183,6 @@ void MainWindow::initGUI() {
     horizLayout1->addWidget(spinR);
     horizLayout1->addWidget(btnRun);
 
-    btnParameters->setCheckable(true);
-    btnParameters->setChecked(false);
-
     QVBoxLayout *verticalLayout1 = new QVBoxLayout();
     verticalLayout1->addWidget(lblTitle);
     verticalLayout1->addLayout(horizLayout1);
@@ -204,7 +211,7 @@ void MainWindow::initGUI() {
 
     QVBoxLayout *verticalLayout2 = new QVBoxLayout();
     verticalLayout2->addLayout(horizLayout4);
-    verticalLayout2->addWidget(txtCurrentPopulation);
+    verticalLayout2->addWidget(tblCurrentPopulation);
     verticalLayout2->addStretch(1);
     verticalLayout2->addWidget(lblRes);
     verticalLayout2->addWidget(lblLocalMax);
@@ -234,18 +241,23 @@ void MainWindow::initGUI() {
     setCentralWidget(scrollArea);
 }
 
-void MainWindow::updateResults(std::vector<std::vector<double>>& generations, std::vector<std::pair<double, double>>& locals, double& maxVal) {
-    txtCurrentPopulation->clear();
+void MainWindow::updateResults(std::vector<std::pair <double, double>>& generation, std::vector<std::pair<double, double>>& locals, double& maxVal) {
+    tblCurrentPopulation->setRowCount(0);
     txtLocalMaxVals->clear();
 
-    size_t cnt = 1;
-    for (auto& generation : generations) {
-        QString line = "";
-        for (double individ : generation) {
-            line += QString("%1. %2").arg(cnt).arg(individ, 0, 'f', 2);
-            cnt++;
-        }
-        txtCurrentPopulation->append(line);
+    tblCurrentPopulation->setRowCount(generation.size());
+    for (int i = 0; i < generation.size(); ++i) {
+        QTableWidgetItem *itemNum = new QTableWidgetItem(QString::number(i + 1));
+        itemNum->setTextAlignment(Qt::AlignCenter);
+        tblCurrentPopulation->setItem(i, 0, itemNum);
+
+        QTableWidgetItem *itemX = new QTableWidgetItem(QString::number(generation[i].first, 'g', 6));
+        itemX->setTextAlignment(Qt::AlignCenter);
+        tblCurrentPopulation->setItem(i, 1, itemX);
+
+        QTableWidgetItem *itemY = new QTableWidgetItem(QString::number(generation[i].second, 'g', 6));
+        itemY->setTextAlignment(Qt::AlignCenter);
+        tblCurrentPopulation->setItem(i, 2, itemY);
     }
 
     for (const auto& local : locals) {
@@ -268,6 +280,7 @@ void MainWindow::handleClicked() {
     else if (clickedButton == btnToStart) emit toBeginRequested();
     else if (clickedButton == btnToEnd) emit toEndRequested();
     else if (clickedButton == btnSave) emit saveRequested();
+    else if (clickedButton == btnOK) frameAdvanced->hide();
 }
 
 void MainWindow::arrowHandle(size_t& total, size_t& cur) {
@@ -334,6 +347,7 @@ void MainWindow::outHandle(GAParameters& gaParams, PolynomData& polynomData) {
 
 void MainWindow::drawPolynomPlot(std::vector<double>& funcValues, std::vector<double>& funcArgs){
     QChart *chart = plotPolynom->chart();
+    chart->setTitle("График исследуемой функции");
     chart->removeAllSeries();
 
     QLineSeries *series = new QLineSeries();
@@ -347,6 +361,7 @@ void MainWindow::drawPolynomPlot(std::vector<double>& funcValues, std::vector<do
     series->setName("Функция f(x)");
     chart->addSeries(series);
     chart->createDefaultAxes();
+
     plotPolynom->setRenderHint(QPainter::Antialiasing);
 }
 
@@ -354,6 +369,7 @@ void MainWindow::updatePlots(std::vector<GenerationSnapshot>& gaHistory, size_t&
     if (index < gaHistory.size()){
         QChart *chartQ = plotQuality->chart();
         QChart *chartP = plotPolynom->chart();
+        chartQ->setTitle("График функции качества");
 
         chartQ->removeAllSeries();
 
@@ -367,9 +383,22 @@ void MainWindow::updatePlots(std::vector<GenerationSnapshot>& gaHistory, size_t&
             seriesQAvg->append(gaHistory[i].generationNumber, gaHistory[i].avgFitness);
         }
 
+
         chartQ->addSeries(seriesQBest);
         chartQ->addSeries(seriesQAvg);
         chartQ->createDefaultAxes();
+
+        auto axesQ_X = chartQ->axes(Qt::Horizontal);
+        auto axesQ_Y = chartQ->axes(Qt::Vertical);
+        if (!axesQ_X.isEmpty() && !axesQ_Y.isEmpty()) {
+            QValueAxis *axisQX = qobject_cast<QValueAxis*>(axesQ_X.first());
+            QValueAxis *axisQY = qobject_cast<QValueAxis*>(axesQ_Y.first());
+            if (axisQX && axisQY){
+                axisQX->setTitleText("Номер поколения");
+                axisQX->setLabelFormat("%.0f");
+                axisQY->setTitleText("Приспособленность");
+            }
+        }
 
         for (QAbstractSeries *oldSeries : chartP->series()) {
             if (oldSeries->name() == "Максимумы популяции") {
