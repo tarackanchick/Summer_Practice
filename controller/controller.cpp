@@ -231,8 +231,7 @@ void Controller::generateParameters()
     std::random_device rd;
     std::mt19937 gen(rd());
     
-    // Генерация случайного полинома (степень от 2 до 5)
-    std::uniform_int_distribution<> degDist(2, 5);
+    std::uniform_int_distribution<> degDist(2, 8);
     std::uniform_real_distribution<> coefDist(-15.0, 15.0);
     
     int degree = degDist(gen);
